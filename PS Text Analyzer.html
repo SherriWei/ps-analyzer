@@ -1,0 +1,623 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PS Text Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            margin-top: 15px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .text-block {
+            margin-bottom: 40px;
+        }
+
+        .text-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .difficulty {
+            display: inline-block;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: #e8f0fe;
+            color: #667eea;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .passage {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            font-size: 15px;
+        }
+
+        .sentence {
+            margin-bottom: 12px;
+            position: relative;
+            padding: 6px 0;
+            cursor: text;
+            user-select: text;
+            transition: background 0.2s;
+        }
+
+        .sentence:hover {
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .sentence.situation {
+            background: rgba(52, 211, 153, 0.15);
+            border-left: 3px solid #34d399;
+            padding-left: 10px;
+        }
+
+        .sentence.problem {
+            background: rgba(245, 158, 11, 0.15);
+            border-left: 3px solid #f59e0b;
+            padding-left: 10px;
+        }
+
+        .sentence.solution {
+            background: rgba(59, 130, 246, 0.15);
+            border-left: 3px solid #3b82f6;
+            padding-left: 10px;
+        }
+
+        .sentence.evaluation {
+            background: rgba(168, 85, 247, 0.15);
+            border-left: 3px solid #a855f7;
+            padding-left: 10px;
+        }
+
+        .label-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+            text-transform: uppercase;
+        }
+
+        .label-badge.situation { background: #34d399; color: white; }
+        .label-badge.problem { background: #f59e0b; color: white; }
+        .label-badge.solution { background: #3b82f6; color: white; }
+        .label-badge.evaluation { background: #a855f7; color: white; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .label-btn {
+            padding: 10px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .label-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .label-btn.situation {
+            border-color: #34d399;
+            color: #34d399;
+        }
+
+        .label-btn.situation:hover {
+            background: #34d399;
+            color: white;
+        }
+
+        .label-btn.problem {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .label-btn.problem:hover {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .label-btn.solution {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .label-btn.solution:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .label-btn.evaluation {
+            border-color: #a855f7;
+            color: #a855f7;
+        }
+
+        .label-btn.evaluation:hover {
+            background: #a855f7;
+            color: white;
+        }
+
+        .instructions {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 25px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions strong {
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f0f4ff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .answer-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .answer-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .answer-item {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border-left: 4px solid #ddd;
+        }
+
+        .answer-item.situation { border-color: #34d399; }
+        .answer-item.problem { border-color: #f59e0b; }
+        .answer-item.solution { border-color: #3b82f6; }
+        .answer-item.evaluation { border-color: #a855f7; }
+
+        .answer-text {
+            font-size: 14px;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .answer-explanation {
+            font-size: 13px;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .reference {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        .navigation {
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .nav-btn {
+            flex: 1;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            padding: 20px;
+        }
+
+        .completion-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .completion-message h2 {
+            color: #34d399;
+            margin-bottom: 12px;
+        }
+
+        .completion-message p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .passage {
+                padding: 15px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .label-btn {
+                width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .nav-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PS Text Analyzer</h1>
+            <p>Learn to identify Problem-Process-Solution structures in academic writing</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="instructions">
+                <strong>How to use:</strong> Read each text passage carefully. Click on a sentence and select the component label that best describes its role in the PS structure. Then click "Check Answer" to compare your analysis with the model.
+            </div>
+
+            <div id="textsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const texts = [
+            {
+                id: 1,
+                title: "Text 1: Motivation in English Learning",
+                difficulty: "Easy",
+                author: "Nguyen, H. C. (2019)",
+                content: "Presently, English is the global language and it plays an important role in order for people to communicate and fit into the real world. Although spending at least three years of learning English language education, many Vietnamese high-school leavers are still not proficient in this language. This is the reason why most of the institutions in Vietnam have to provide further English language support for the first 2-years of higher education. However, the employers complain a lot about the level of English language proficiency among graduates. There are many factors responsible for low proficiency in English among Vietnamese students. One of the factors might be attributed to the students' motivation towards English language.",
+                sentences: [
+                    { text: "Presently, English is the global language and it plays an important role in order for people to communicate and fit into the real world.", type: "situation", explanation: "This provides general context about English in the global context—the opening situation." },
+                    { text: "Although spending at least three years of learning English language education, many Vietnamese high-school leavers are still not proficient in this language.", type: "problem", explanation: "This identifies the specific problem: despite years of study, students are not proficient." },
+                    { text: "This is the reason why most of the institutions in Vietnam have to provide further English language support for the first 2-years of higher education.", type: "problem", explanation: "This expands on the problem and its consequences—institutions must provide additional support." },
+                    { text: "However, the employers complain a lot about the level of English language proficiency among graduates.", type: "problem", explanation: "This further establishes the problem by showing how it affects the job market." },
+                    { text: "There are many factors responsible for low proficiency in English among Vietnamese students.", type: "problem", explanation: "This identifies multiple causes of the problem." },
+                    { text: "One of the factors might be attributed to the students' motivation towards English language.", type: "solution", explanation: "This suggests that motivation (or lack thereof) may be a key factor to address—pointing toward the research direction." }
+                ]
+            },
+            {
+                id: 2,
+                title: "Text 2: Digital Pens in English Learning",
+                difficulty: "Medium",
+                author: "Choi, N., Kang, S., & Sheo, J. (2020)",
+                content: "Additionally, in South Korea's English learning context, there is clear favoritism towards North American English. Especially because pronunciation is considered a vital aspect of successful English learning, some Korean mothers prefer using native speakers' recorded voices rather than their own when it comes to exposing their children to English. As a result, digital pens have been gaining popularity in replacement of audiotapes and CDs. 'Say pen', a representative commercial digital pen for young children, has sold about 3 million in Korea.",
+                sentences: [
+                    { text: "Additionally, in South Korea's English learning context, there is clear favoritism towards North American English.", type: "situation", explanation: "This establishes the cultural and educational context in South Korea." },
+                    { text: "Especially because pronunciation is considered a vital aspect of successful English learning, some Korean mothers prefer using native speakers' recorded voices rather than their own when it comes to exposing their children to English.", type: "problem", explanation: "This explains why the problem exists—pronunciation matters, and native speakers are preferred over parents." },
+                    { text: "As a result, digital pens have been gaining popularity in replacement of audiotapes and CDs.", type: "solution", explanation: "This shows the practical solution that has emerged: digital pens replacing older technology." },
+                    { text: "'Say pen', a representative commercial digital pen for young children, has sold about 3 million in Korea.", type: "evaluation", explanation: "This provides evidence that the solution is working and being adopted widely—quantitative evaluation." }
+                ]
+            },
+            {
+                id: 3,
+                title: "Text 3: Perception and Production in L2 Learning",
+                difficulty: "Medium",
+                author: "Hung, M., & Lin, F.-C. (2021)",
+                content: "The relationship between perception and production is especially difficult to determine in adult L2 acquisition, because, in comparison to L1 development in children, adult L2 acquisition is variable along many dimensions. These two abilities are like two processes of language acquisition that have always raised great interest in researchers, with regard to both L1 and L2 acquisition. Therefore, knowing the relationship between perception and production and the effects brought by the individual differences is an important way for both theoretical and pedagogical contributions to language acquisition.",
+                sentences: [
+                    { text: "The relationship between perception and production is especially difficult to determine in adult L2 acquisition, because, in comparison to L1 development in children, adult L2 acquisition is variable along many dimensions.", type: "problem", explanation: "This immediately identifies the problem: the relationship is complex and difficult to determine, with many variables." },
+                    { text: "These two abilities are like two processes of language acquisition that have always raised great interest in researchers, with regard to both L1 and L2 acquisition.", type: "situation", explanation: "This establishes that perception and production are significant processes that researchers care about." },
+                    { text: "Therefore, knowing the relationship between perception and production and the effects brought by the individual differences is an important way for both theoretical and pedagogical contributions to language acquisition.", type: "solution", explanation: "This proposes that understanding this relationship would be valuable—suggesting the research direction needed." }
+                ]
+            },
+            {
+                id: 4,
+                title: "Text 4: Smartphones and English Vocabulary",
+                difficulty: "Hard",
+                author: "Yu, F., & Sukying, A. (2021)",
+                content: "The increasing economic and cultural exchanges between Asian and western countries have cemented English as a popular, necessary communication tool. Smartphone and internet technologies have resulted in the appearance of the 'Mobile learning' (M-learning) concept. At present, smartphones are recognized as the most popular mobile devices for learning. However, little research has been conducted on Chinese learners' use of smartphones in English vocabulary learning outside mainland China, especially in Thailand. This study was designed to understand the use of smartphones by Chinese learners in learning English vocabulary, including the acquisition of word form, meaning, and use, both receptively and productively.",
+                sentences: [
+                    { text: "The increasing economic and cultural exchanges between Asian and western countries have cemented English as a popular, necessary communication tool.", type: "situation", explanation: "This provides the broad context: English is necessary due to international exchanges." },
+                    { text: "Smartphone and internet technologies have resulted in the appearance of the 'Mobile learning' (M-learning) concept.", type: "situation", explanation: "This describes an existing technological development that is relevant to the research context." },
+                    { text: "At present, smartphones are recognized as the most popular mobile devices for learning.", type: "situation", explanation: "This further establishes the relevance of smartphones in educational contexts." },
+                    { text: "However, little research has been conducted on Chinese learners' use of smartphones in English vocabulary learning outside mainland China, especially in Thailand.", type: "problem", explanation: "This identifies the gap in research—the problem that motivates the study." },
+                    { text: "This study was designed to understand the use of smartphones by Chinese learners in learning English vocabulary, including the acquisition of word form, meaning, and use, both receptively and productively.", type: "solution", explanation: "This proposes the research study as the solution to address the identified gap." }
+                ]
+            }
+        ];
+
+        let currentTextIndex = 0;
+        let userAnalyses = {};
+        let answersRevealed = {};
+
+        function renderTexts() {
+            const container = document.getElementById('textsContainer');
+            container.innerHTML = '';
+
+            const text = texts[currentTextIndex];
+            const textElement = document.createElement('div');
+            textElement.className = 'text-block';
+
+            let titleHtml = `<div class="text-title">
+                ${text.title}
+                <span class="difficulty">${text.difficulty}</span>
+            </div>`;
+
+            let passageHtml = '<div class="passage">';
+            text.sentences.forEach((sentence, idx) => {
+                const userType = userAnalyses[currentTextIndex]?.[idx] || '';
+                const classList = ['sentence'];
+                if (userType) classList.push(userType);
+
+                let labelBadgeHtml = '';
+                if (userType) {
+                    labelBadgeHtml = `<span class="label-badge ${userType}">${userType}</span>`;
+                }
+
+                passageHtml += `
+                    <div class="sentence ${userType}" data-index="${idx}">
+                        ${sentence.text}${labelBadgeHtml}
+                    </div>
+                `;
+            });
+            passageHtml += '</div>';
+
+            let controlsHtml = '<div class="controls">';
+            const types = ['situation', 'problem', 'solution', 'evaluation'];
+            types.forEach(type => {
+                controlsHtml += `<button class="label-btn ${type}" onclick="labelSentence('${type}')">${type.charAt(0).toUpperCase() + type.slice(1)}</button>`;
+            });
+            controlsHtml += '</div>';
+
+            let answersHtml = '';
+            if (answersRevealed[currentTextIndex]) {
+                answersHtml = `
+                    <div class="answer-section">
+                        <h3>✓ Model Analysis</h3>
+                        ${text.sentences.map((sentence, idx) => `
+                            <div class="answer-item ${sentence.type}">
+                                <div class="answer-text"><strong>${sentence.type.toUpperCase()}:</strong> ${sentence.text}</div>
+                                <div class="answer-explanation">${sentence.explanation}</div>
+                            </div>
+                        `).join('')}
+                        <div class="reference">${text.author}</div>
+                    </div>
+                `;
+            }
+
+            let actionButtonsHtml = `
+                <div class="action-buttons">
+                    ${answersRevealed[currentTextIndex] ?
+                        '<button class="btn btn-secondary" onclick="hidAnswers()">Hide Answer</button>' :
+                        '<button class="btn btn-primary" onclick="showAnswers()">Check Answer</button>'
+                    }
+                </div>
+            `;
+
+            let navigationHtml = `
+                <div class="navigation">
+                    ${currentTextIndex > 0 ?
+                        '<button class="btn btn-secondary nav-btn" onclick="previousText()">← Previous Text</button>' :
+                        '<div class="nav-btn"></div>'
+                    }
+                    <div style="flex: 1;"></div>
+                    ${currentTextIndex < texts.length - 1 ?
+                        '<button class="btn btn-secondary nav-btn" onclick="nextText()">Next Text →</button>' :
+                        '<div class="nav-btn"></div>'
+                    }
+                </div>
+            `;
+
+            textElement.innerHTML = titleHtml + passageHtml + controlsHtml + actionButtonsHtml + answersHtml + navigationHtml;
+            container.appendChild(textElement);
+
+            // Add click handlers to sentences
+            document.querySelectorAll('.sentence').forEach(el => {
+                el.addEventListener('click', function() {
+                    if (window.getSelection().toString().length === 0) {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        selectSentence(index);
+                    }
+                });
+            });
+
+            updateProgress();
+        }
+
+        let selectedSentenceIndex = null;
+
+        function selectSentence(index) {
+            document.querySelectorAll('.sentence').forEach(el => el.style.outline = '');
+            document.querySelectorAll('.sentence')[index].style.outline = '3px dashed #667eea';
+            selectedSentenceIndex = index;
+        }
+
+        function labelSentence(type) {
+            if (selectedSentenceIndex === null) {
+                alert('Please click on a sentence first');
+                return;
+            }
+
+            if (!userAnalyses[currentTextIndex]) {
+                userAnalyses[currentTextIndex] = {};
+            }
+
+            userAnalyses[currentTextIndex][selectedSentenceIndex] = type;
+            renderTexts();
+        }
+
+        function showAnswers() {
+            answersRevealed[currentTextIndex] = true;
+            renderTexts();
+        }
+
+        function hidAnswers() {
+            answersRevealed[currentTextIndex] = false;
+            renderTexts();
+        }
+
+        function nextText() {
+            if (currentTextIndex < texts.length - 1) {
+                currentTextIndex++;
+                renderTexts();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function previousText() {
+            if (currentTextIndex > 0) {
+                currentTextIndex--;
+                renderTexts();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateProgress() {
+            const completed = Object.keys(userAnalyses).length;
+            const total = texts.length;
+            const percentage = (completed / total) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+
+        // Initialize
+        renderTexts();
+    </script>
+</body>
+</html>
+</body></html>
